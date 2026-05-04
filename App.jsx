@@ -221,6 +221,9 @@ export default function App() {
   const bootstrappedDisk = useRef(false);
 
   const t = themes[theme];
+  const chromeText = t.chromeText ?? t.text;
+  const chromeTextMuted = t.chromeTextMuted ?? t.textMuted;
+  const chromeTextDim = t.chromeTextDim ?? chromeTextMuted;
   const active = docs[activeId];
 
   const wordCount = active ? wordCountFromHtml(active.content) : 0;
@@ -359,7 +362,7 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [persistPayload, projectPath]);
 
-  const proseAlign = theme === 'library' || theme === 'moleskine' ? 'justify' : 'left';
+  const proseAlign = theme === 'library' ? 'justify' : 'left';
 
   function updateHtmlContent(id, content) {
     setDocs((d) => ({ ...d, [id]: { ...d[id], content } }));
@@ -619,7 +622,7 @@ export default function App() {
       style={{
         height: '100vh',
         background: t.appBg,
-        color: t.text,
+        color: chromeText,
         fontFamily: t.fontUi,
         display: 'flex',
         flexDirection: 'column',
@@ -637,7 +640,7 @@ export default function App() {
           borderBottom: `1px solid ${t.border}`,
           fontSize: 12,
           fontFamily: titleBarFont,
-          color: t.textMuted,
+          color: chromeTextMuted,
           letterSpacing: 0.2,
         }}
       >
@@ -714,7 +717,7 @@ export default function App() {
             </button>
             <input ref={importInputRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={onImportFile} />
             {projectPath ? (
-              <div style={{ fontSize: 10, color: t.textMuted, wordBreak: 'break-all' }}>{projectPath}</div>
+              <div style={{ fontSize: 10, color: chromeTextMuted, wordBreak: 'break-all' }}>{projectPath}</div>
             ) : null}
           </div>
         </details>
@@ -743,7 +746,7 @@ export default function App() {
                 flex: '1 1 auto',
                 minWidth: '4.25rem',
                 background: sidebarSection === 'manuscript' ? t.activeBg : 'transparent',
-                color: sidebarSection === 'manuscript' ? t.activeText : t.textMuted,
+                color: sidebarSection === 'manuscript' ? t.activeText : chromeTextMuted,
               }}
             >
               manuscript
@@ -756,7 +759,7 @@ export default function App() {
                 flex: '1 1 auto',
                 minWidth: '4.25rem',
                 background: sidebarSection === 'characters' ? t.activeBg : 'transparent',
-                color: sidebarSection === 'characters' ? t.activeText : t.textMuted,
+                color: sidebarSection === 'characters' ? t.activeText : chromeTextMuted,
               }}
             >
               characters
@@ -769,7 +772,7 @@ export default function App() {
                 flex: '1 1 auto',
                 minWidth: '4.25rem',
                 background: sidebarSection === 'references' ? t.activeBg : 'transparent',
-                color: sidebarSection === 'references' ? t.activeText : t.textMuted,
+                color: sidebarSection === 'references' ? t.activeText : chromeTextMuted,
               }}
             >
               refs
@@ -836,7 +839,7 @@ export default function App() {
                 ...btnStyle(t),
                 width: '100%',
                 background: sidebarSection === 'trash' ? t.activeBg : 'transparent',
-                color: sidebarSection === 'trash' ? t.activeText : t.textMuted,
+                color: sidebarSection === 'trash' ? t.activeText : chromeTextMuted,
               }}
               title="Trashed scenes"
             >
@@ -845,7 +848,16 @@ export default function App() {
           </div>
         </div>
 
-        <div style={{ background: t.canvas, overflow: 'hidden', position: 'relative', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <div
+          style={{
+            background: editorSheetMode ? (t.desk ?? t.canvas) : t.canvas,
+            overflow: 'hidden',
+            position: 'relative',
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
           {showNameGen && <NameGenPanel theme={t} onClose={() => setShowNameGen(false)} />}
           {binderView === 'corkboard' ? (
             <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
@@ -864,11 +876,11 @@ export default function App() {
                     borderBottom: `1px solid ${t.border}`,
                     background: t.chrome,
                     fontSize: 11,
-                    color: t.textMuted,
+                    color: chromeTextMuted,
                   }}
                 >
                   <span style={{ flex: 1, minWidth: 0 }}>
-                    Pinned reference: <strong style={{ color: t.text }}>{pinnedReference.title}</strong>
+                    Pinned reference: <strong style={{ color: chromeText }}>{pinnedReference.title}</strong>
                   </span>
                   <button type="button" style={btnStyle(t)} onClick={() => setPinnedRefId(null)}>
                     unpin
@@ -881,58 +893,134 @@ export default function App() {
                     flex: 1,
                     minWidth: 0,
                     overflowY: 'auto',
-                    padding: pinnedReference && sidebarSection === 'manuscript' ? '32px 28px' : '40px 60px',
+                    padding: pinnedReference && sidebarSection === 'manuscript' ? '24px 28px' : '40px 60px',
                     maxWidth: pinnedReference && sidebarSection === 'manuscript' ? 'none' : 720,
                     margin: pinnedReference && sidebarSection === 'manuscript' ? 0 : '0 auto',
                   }}
                 >
-                  <input
-                    value={active.title}
-                    onChange={(e) => updateTitle(activeId, e.target.value)}
-                    style={{
-                      fontFamily: t.fontSerif,
-                      fontSize: 28,
-                      fontWeight: 500,
-                      color: t.text,
-                      background: 'transparent',
-                      border: 'none',
-                      outline: 'none',
-                      width: '100%',
-                      marginBottom: 6,
-                      padding: 0,
-                    }}
-                  />
-                  <input
-                    value={active.subchapterTitle ?? ''}
-                    onChange={(e) => updateSubchapterTitle(activeId, e.target.value)}
-                    placeholder="Subchapter title (optional)"
-                    aria-label="Subchapter title"
-                    style={{
-                      fontFamily: t.fontSerif,
-                      fontSize: 16,
-                      fontWeight: 400,
-                      color: t.textMuted,
-                      background: 'transparent',
-                      border: 'none',
-                      borderBottom: `1px solid ${t.border}`,
-                      outline: 'none',
-                      width: '100%',
-                      marginBottom: 24,
-                      padding: '0 0 6px 0',
-                    }}
-                  />
-                  <TipTapEditor
-                    key={`${activeId}:${composeKey}`}
-                    sceneId={activeId}
-                    contentHtml={ensureHtml(active.content)}
-                    onHtmlChange={(html) => updateHtmlContent(activeId, html)}
-                    placeholder="Begin where you like…"
-                    proseFont={t.fontProse}
-                    textColor={t.text}
-                    textAlign={proseAlign}
-                    placeholderMuted={t.textMuted}
-                    sheetMode={editorSheetMode}
-                  />
+                  {editorSheetMode ? (
+                    <div
+                      style={{
+                        maxWidth: 700,
+                        margin: '0 auto',
+                        background: t.desk ?? t.sidebar,
+                        borderRadius: 8,
+                        padding: '10px 10px 14px',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.18), 0 6px 14px rgba(0,0,0,0.12)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 680,
+                          margin: '0 auto',
+                          background: t.canvas,
+                          borderRadius: 2,
+                          boxShadow: '0 0 0 1px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.08)',
+                          boxSizing: 'border-box',
+                          padding: '80px 90px 140px',
+                        }}
+                      >
+                        <input
+                          value={active.title}
+                          onChange={(e) => updateTitle(activeId, e.target.value)}
+                          style={{
+                            fontFamily: t.fontSerif,
+                            fontSize: 46,
+                            fontWeight: 500,
+                            color: t.text,
+                            background: 'transparent',
+                            border: 'none',
+                            outline: 'none',
+                            width: '100%',
+                            marginBottom: 8,
+                            padding: 0,
+                            lineHeight: 1.12,
+                          }}
+                        />
+                        <input
+                          value={active.subchapterTitle ?? ''}
+                          onChange={(e) => updateSubchapterTitle(activeId, e.target.value)}
+                          placeholder="Subchapter title (optional)"
+                          aria-label="Subchapter title"
+                          style={{
+                            fontFamily: t.fontSerif,
+                            fontSize: 16,
+                            fontWeight: 400,
+                            color: t.textMuted,
+                            background: 'transparent',
+                            border: 'none',
+                            outline: 'none',
+                            width: '100%',
+                            marginBottom: 10,
+                            padding: 0,
+                          }}
+                        />
+                        <div style={{ height: 1, background: t.border, marginBottom: 26 }} />
+                        <TipTapEditor
+                          key={`${activeId}:${composeKey}`}
+                          sceneId={activeId}
+                          contentHtml={ensureHtml(active.content)}
+                          onHtmlChange={(html) => updateHtmlContent(activeId, html)}
+                          placeholder="Begin where you like…"
+                          proseFont={t.fontProse}
+                          textColor={t.text}
+                          textAlign={proseAlign}
+                          placeholderMuted={t.textMuted}
+                          sheetMode={true}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <input
+                        value={active.title}
+                        onChange={(e) => updateTitle(activeId, e.target.value)}
+                        style={{
+                          fontFamily: t.fontSerif,
+                          fontSize: 28,
+                          fontWeight: 500,
+                          color: t.text,
+                          background: 'transparent',
+                          border: 'none',
+                          outline: 'none',
+                          width: '100%',
+                          marginBottom: 6,
+                          padding: 0,
+                        }}
+                      />
+                      <input
+                        value={active.subchapterTitle ?? ''}
+                        onChange={(e) => updateSubchapterTitle(activeId, e.target.value)}
+                        placeholder="Subchapter title (optional)"
+                        aria-label="Subchapter title"
+                        style={{
+                          fontFamily: t.fontSerif,
+                          fontSize: 16,
+                          fontWeight: 400,
+                          color: t.textMuted,
+                          background: 'transparent',
+                          border: 'none',
+                          borderBottom: `1px solid ${t.border}`,
+                          outline: 'none',
+                          width: '100%',
+                          marginBottom: 24,
+                          padding: '0 0 6px 0',
+                        }}
+                      />
+                      <TipTapEditor
+                        key={`${activeId}:${composeKey}`}
+                        sceneId={activeId}
+                        contentHtml={ensureHtml(active.content)}
+                        onHtmlChange={(html) => updateHtmlContent(activeId, html)}
+                        placeholder="Begin where you like…"
+                        proseFont={t.fontProse}
+                        textColor={t.text}
+                        textAlign={proseAlign}
+                        placeholderMuted={t.textMuted}
+                        sheetMode={false}
+                      />
+                    </>
+                  )}
                 </div>
                 {pinnedReference && sidebarSection === 'manuscript' ? (
                   <div
@@ -971,6 +1059,7 @@ export default function App() {
               borderLeft: `1px solid ${t.border}`,
               padding: '14px 12px',
               fontSize: 12,
+              color: chromeText,
               overflowY: 'auto',
             }}
           >
@@ -1077,26 +1166,26 @@ export default function App() {
                     fontFamily: t.fontUi,
                   }}
                 >
-                  <div style={{ color: t.textMuted, marginBottom: 4 }}>{formatWhen(snap.savedAt)}</div>
+                  <div style={{ color: chromeTextMuted, marginBottom: 4 }}>{formatWhen(snap.savedAt)}</div>
                   <div style={{ fontWeight: 600 }}>{snap.title}</div>
                 </button>
               ))}
               {(active.snapshots || []).length === 0 ? (
-                <div style={{ fontSize: 11, color: t.textMuted }}>No checkpoints yet.</div>
+            <div style={{ fontSize: 11, color: chromeTextMuted }}>No checkpoints yet.</div>
               ) : null}
             </div>
 
             <div style={sectionLabelStyle(t)}>METADATA</div>
-            <div style={{ color: t.textMuted, lineHeight: 1.9, marginBottom: 8 }}>
+            <div style={{ color: chromeTextMuted, lineHeight: 1.9, marginBottom: 8 }}>
               <div>
-                Words · <span style={{ color: t.text }}>{wordCount.toLocaleString()}</span>
+                Words · <span style={{ color: chromeText }}>{wordCount.toLocaleString()}</span>
               </div>
               <div style={{ marginTop: 6 }}>
                 ≈ Pages (250 wpp) ·{' '}
-                <span style={{ color: t.text }}>{Math.max(1, Math.round(wordCount / 250)).toLocaleString()}</span>
+                <span style={{ color: chromeText }}>{Math.max(1, Math.round(wordCount / 250)).toLocaleString()}</span>
               </div>
             </div>
-            <label style={{ fontSize: 10, color: t.textMuted, display: 'block', marginBottom: 4 }}>Target word count</label>
+            <label style={{ fontSize: 10, color: chromeTextMuted, display: 'block', marginBottom: 4 }}>Target word count</label>
             <input
               type="number"
               min={100}
@@ -1142,7 +1231,7 @@ export default function App() {
               borderLeft: `1px solid ${t.border}`,
               padding: '14px 12px',
               fontSize: 12,
-              color: t.textMuted,
+              color: chromeTextMuted,
               overflowY: 'auto',
             }}
           >
@@ -1159,7 +1248,7 @@ export default function App() {
           background: t.chrome,
           borderTop: `1px solid ${t.border}`,
           fontSize: 11,
-          color: t.textMuted,
+          color: chromeTextMuted,
           fontFamily: titleBarFont,
         }}
       >
@@ -1196,6 +1285,8 @@ function Folder({
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
+  const cText = chromeText(theme);
+  const cMuted = chromeMuted(theme);
 
   /** @param {import('@dnd-kit/core').DragEndEvent} ev */
   function handleDragEnd(ev) {
@@ -1222,7 +1313,7 @@ function Folder({
           gap: 4,
           cursor: 'pointer',
           padding: '4px 4px',
-          color: theme.text,
+          color: cText,
           fontWeight: 500,
         }}
       >
@@ -1241,7 +1332,7 @@ function Folder({
             background: 'transparent',
             border: 'none',
             cursor: 'pointer',
-            color: theme.textMuted,
+            color: cMuted,
           }}
           title="Rename part"
           aria-label="Rename part"
@@ -1262,7 +1353,7 @@ function Folder({
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              color: theme.textMuted,
+              color: cMuted,
             }}
             title="Delete empty part"
             aria-label="Delete empty part"
@@ -1283,7 +1374,7 @@ function Folder({
             background: 'transparent',
             border: 'none',
             cursor: 'pointer',
-            color: theme.textMuted,
+            color: cMuted,
           }}
           title="Add scene"
           aria-label="Add scene"
@@ -1322,6 +1413,8 @@ function Folder({
 
 /** @param {{ id: string, title: string, subchapterTitle: string, selected: boolean, theme: ThemeTokens, onSelect: () => void, onMoveToTrash: () => void }} props */
 function SortableSceneRow({ id, title, subchapterTitle, selected, theme, onSelect, onMoveToTrash }) {
+  const cText = chromeText(theme);
+  const cMuted = chromeMuted(theme);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -1338,7 +1431,7 @@ function SortableSceneRow({ id, title, subchapterTitle, selected, theme, onSelec
           gap: 2,
           padding: selected ? '4px 8px' : '4px 4px',
           margin: '1px 0',
-          color: selected ? theme.activeText : theme.textMuted,
+          color: selected ? theme.activeText : cMuted,
           background: selected ? theme.activeBg : 'transparent',
           borderRadius: 3,
           fontWeight: selected ? 500 : 400,
@@ -1356,7 +1449,7 @@ function SortableSceneRow({ id, title, subchapterTitle, selected, theme, onSelec
             cursor: 'grab',
             border: 'none',
             background: 'transparent',
-            color: theme.textMuted,
+            color: cMuted,
             padding: '0 4px',
             fontSize: 13,
             marginTop: 2,
@@ -1379,13 +1472,13 @@ function SortableSceneRow({ id, title, subchapterTitle, selected, theme, onSelec
           }}
           style={{ flex: 1, cursor: 'pointer', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}
         >
-          <span style={{ fontWeight: selected ? 500 : 400, color: selected ? theme.activeText : theme.text }}>{title}</span>
+          <span style={{ fontWeight: selected ? 500 : 400, color: selected ? theme.activeText : cText }}>{title}</span>
           {String(subchapterTitle || '').trim() ? (
             <span
               style={{
                 fontSize: 10,
                 fontWeight: 400,
-                color: theme.textMuted,
+                color: cMuted,
                 lineHeight: 1.25,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -1409,7 +1502,7 @@ function SortableSceneRow({ id, title, subchapterTitle, selected, theme, onSelec
           style={{
             border: 'none',
             background: 'transparent',
-            color: theme.textMuted,
+            color: cMuted,
             opacity: 0.55,
             cursor: 'pointer',
             padding: '0 4px',
@@ -1500,6 +1593,7 @@ function Corkboard({ tree, docs, activeId, onSelect, theme }) {
 
 /** @param {{ trashedDocs: Record<string, { deletedAt: number, fromFolderId: string | null, doc: any }>, onRestore: (id: string) => void, onPurge: (id: string) => void, onEmptyTrash: () => void, theme: ThemeTokens }} props */
 function TrashPanel({ trashedDocs, onRestore, onPurge, onEmptyTrash, theme }) {
+  const cMuted = chromeMuted(theme);
   const rows = useMemo(
     () =>
       Object.entries(trashedDocs)
@@ -1511,11 +1605,11 @@ function TrashPanel({ trashedDocs, onRestore, onPurge, onEmptyTrash, theme }) {
   return (
     <>
       <div style={sectionLabelStyle(theme)}>TRASH</div>
-      <p style={{ fontSize: 11, color: theme.textMuted, lineHeight: 1.45, margin: '0 0 12px 0', paddingRight: 2 }}>
+      <p style={{ fontSize: 11, color: cMuted, lineHeight: 1.45, margin: '0 0 12px 0', paddingRight: 2 }}>
         Scenes removed from the manuscript land here until you restore or delete them for good.
       </p>
       {rows.length === 0 ? (
-        <div style={{ fontSize: 12, color: theme.textMuted }}>Trash is empty.</div>
+        <div style={{ fontSize: 12, color: cMuted }}>Trash is empty.</div>
       ) : (
         <>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
@@ -1530,7 +1624,7 @@ function TrashPanel({ trashedDocs, onRestore, onPurge, onEmptyTrash, theme }) {
                 }}
               >
                 <div style={{ fontFamily: theme.fontSerif, fontWeight: 600, marginBottom: 4, fontSize: 13 }}>{row.doc.title}</div>
-                <div style={{ fontSize: 10, color: theme.textMuted, marginBottom: 10 }}>{formatWhen(row.deletedAt)}</div>
+                <div style={{ fontSize: 10, color: cMuted, marginBottom: 10 }}>{formatWhen(row.deletedAt)}</div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   <button type="button" style={{ ...btnStyle(theme), flex: '1 1 auto' }} onClick={() => onRestore(row.id)}>
                     restore
@@ -1557,6 +1651,7 @@ function TrashPanel({ trashedDocs, onRestore, onPurge, onEmptyTrash, theme }) {
 
 /** @param {{ characters: any[], setCharacters: React.Dispatch<React.SetStateAction<any[]>>, theme: ThemeTokens }} props */
 function CharactersPanel({ characters, setCharacters, theme }) {
+  const cMuted = chromeMuted(theme);
   function addCharacter() {
     const id = `char-${Date.now()}`;
     setCharacters((cs) => [...cs, { id, name: '', role: '', notes: '' }]);
@@ -1577,7 +1672,7 @@ function CharactersPanel({ characters, setCharacters, theme }) {
         new character
       </button>
       {!characters.length ? (
-        <div style={{ fontSize: 12, color: theme.textMuted, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 12, color: cMuted, lineHeight: 1.5 }}>
           Outline names, arcs, flaws — handy when you rename someone mid-draft.
         </div>
       ) : (
@@ -1623,6 +1718,8 @@ function CharactersPanel({ characters, setCharacters, theme }) {
 
 /** @param {{ theme: ThemeTokens, onClose: () => void }} props */
 function NameGenPanel({ theme, onClose }) {
+  const cMuted = chromeMuted(theme);
+  const cText = chromeText(theme);
   const [origin, setOrigin] = useState('any');
   const [gender, setGender] = useState('any');
   const [results, setResults] = useState(() => Array.from({ length: 8 }, () => generateName('any', 'any')));
@@ -1658,7 +1755,7 @@ function NameGenPanel({ theme, onClose }) {
               onClose();
             }
           }}
-          style={{ cursor: 'pointer', color: theme.textMuted }}
+          style={{ cursor: 'pointer', color: cMuted }}
         >
           ×
         </span>
@@ -1689,7 +1786,7 @@ function NameGenPanel({ theme, onClose }) {
               borderRadius: 3,
               fontSize: 12,
               fontFamily: theme.fontSerif,
-              color: theme.text,
+              color: cText,
             }}
           >
             {name}
@@ -1708,7 +1805,7 @@ function sectionLabelStyle(t) {
   return {
     fontFamily: t.fontSerif,
     fontSize: 10,
-    color: t.textMuted,
+    color: chromeDim(t),
     letterSpacing: 1.5,
     marginBottom: 10,
     fontWeight: 500,
@@ -1720,7 +1817,7 @@ function btnStyle(t) {
   return {
     background: 'transparent',
     border: `1px solid ${t.border}`,
-    color: t.textMuted,
+    color: chromeMuted(t),
     padding: '4px 10px',
     fontSize: 11,
     borderRadius: 3,
@@ -1734,7 +1831,7 @@ function selectStyle(t) {
   return {
     background: t.canvas,
     border: `1px solid ${t.border}`,
-    color: t.text,
+    color: chromeText(t),
     fontSize: 11,
     padding: '4px 6px',
     borderRadius: 3,
@@ -1749,7 +1846,7 @@ function detailsStyle(t) {
     padding: '4px 8px',
     border: `1px solid ${t.border}`,
     borderRadius: 3,
-    color: t.textMuted,
+    color: chromeMuted(t),
     background: t.canvas,
   };
 }
@@ -1759,7 +1856,7 @@ function summaryStyle(t) {
   return {
     cursor: 'pointer',
     userSelect: 'none',
-    color: t.textMuted,
+    color: chromeMuted(t),
     fontFamily: 'inherit',
     letterSpacing: 0.2,
   };
@@ -1769,7 +1866,7 @@ function summaryStyle(t) {
 function characterInput(t) {
   return {
     width: '100%',
-    background: t.sidebar,
+    background: t.canvas,
     border: `1px solid ${t.border}`,
     borderRadius: 3,
     padding: '7px 8px',
@@ -1786,7 +1883,7 @@ function characterTextarea(t) {
   return {
     width: '100%',
     boxSizing: 'border-box',
-    background: t.sidebar,
+    background: t.canvas,
     border: `1px solid ${t.border}`,
     borderRadius: 3,
     padding: 8,
@@ -1797,4 +1894,17 @@ function characterTextarea(t) {
     outline: 'none',
     resize: 'vertical',
   };
+}
+
+/** @param {ThemeTokens} t */
+function chromeText(t) {
+  return t.chromeText ?? t.text;
+}
+/** @param {ThemeTokens} t */
+function chromeMuted(t) {
+  return t.chromeTextMuted ?? t.textMuted;
+}
+/** @param {ThemeTokens} t */
+function chromeDim(t) {
+  return t.chromeTextDim ?? t.chromeTextMuted ?? t.textMuted;
 }

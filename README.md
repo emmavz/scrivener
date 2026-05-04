@@ -1,53 +1,87 @@
-# Scrivener clone — starter
+# Scrivener Clone
 
-A local writing environment for novelists, with two switchable visual themes.
+A local-first writing app for long-form fiction, built with React + TipTap + Tauri.
 
-## Run it
+It is designed for drafting scenes quickly while keeping structure, metadata, references, and exports in one place.
+
+## Features
+
+- **Binder + parts + scenes**: organize manuscript into parts, add/reorder scenes with drag-and-drop.
+- **Rich text editor**: TipTap-based drafting with smart typography and paste normalization.
+- **Subchapter titles**: optional subtitle line under each scene title.
+- **Page view mode**: switch between continuous flow and page-like sheets; insert explicit page breaks.
+- **Corkboard view**: synopsis cards for scenes.
+- **Inspector metadata**: synopsis, scene notes, word target, progress bar, rough page estimate.
+- **Snapshots**: capture/restore scene checkpoints.
+- **Characters tab**: maintain character entries.
+- **References tab**: upload/paste reference material and pin one beside the editor while drafting.
+- **Trash workflow**: move scenes to trash, restore or permanently delete.
+- **Compile/export**: Markdown, DOCX, and Print/PDF output.
+- **Name generator**: expanded multi-origin pools (`english`, `nordic`, `celtic`, `fantasy`, `french`, `slavic`, `spanish`).
+- **Themes**: `library`, `atelier`, `midnight`.
+
+## Quick Start (Web)
 
 ```bash
 npm install
 npm run dev
 ```
 
-Then open http://localhost:5173.
+Open the URL printed by Vite (typically `http://localhost:5173`).
 
-## What's here
+## Desktop App (Tauri, macOS)
 
-- **Three-pane layout**: binder (folders/scenes) · editor · inspector (synopsis + word count)
-- **Two themes**: `library` (warm, wood-and-paper, all-serif) and `atelier` (clean, modern, mixed type). Toggle in the title bar.
-- **Name generator**: click the button in the title bar. Origins: english, nordic, celtic, fantasy. Edit `src/nameGenerator.js` to add more.
-- **Autosave to localStorage**: your work persists between sessions. (We'll swap this for real disk later.)
-- **Add scenes**: click the `+` next to a folder.
-- **Editable everything**: title, body, synopsis.
+### Dev mode
 
-## File layout
-
-```
-src/
-  App.jsx              ← the whole app, ~300 lines
-  themes.js            ← the two vibes, as plain data
-  nameGenerator.js     ← name lists + picker function
-  main.jsx             ← React entry point
-index.html
-package.json
-vite.config.js
+```bash
+npm run tauri:dev
 ```
 
-## Where to go next (roadmap)
+- Uses a stable dev origin by default (`127.0.0.1:5173`) so browser storage is consistent.
+- If 5173 is busy, run with another port explicitly:
 
-Easy wins, in rough order of bang-for-buck:
+```bash
+VITE_DEV_PORT=5174 npm run tauri:dev
+```
 
-1. **Better editor** — swap the `<textarea>` for [TipTap](https://tiptap.dev) so you get proper rich text, smart quotes, em-dash autoreplace.
-2. **Corkboard view** — a grid of synopsis cards. Mostly just CSS Grid + the data you already have.
-3. **Drag to reorder** scenes in the binder. [`dnd-kit`](https://dndkit.com) is the right choice.
-4. **Real file storage** — wrap this in [Tauri](https://tauri.app) and you can save your manuscript as actual files on disk (one `.md` per scene, with frontmatter for metadata). About a day of work.
-5. **Character sheets** — a new sidebar tab. Forms saved as JSON. Easy.
-6. **Compile** — concatenate scenes in order, export as `.md`, `.docx`, or PDF. The first two are trivial; PDF needs a library like `react-pdf` or printing via the browser.
-7. **Snapshots** — copy the doc to a `snapshots` array on save. Show a history list.
-8. **More themes** — add to `themes.js`. Maybe a midnight/blackboard one, or a Moleskine red.
+### Build release app bundle
+
+```bash
+npm run tauri:build
+```
+
+Output app bundle:
+
+`src-tauri/target/release/bundle/macos/scrivener-clone.app`
+
+## Persistence & Backups
+
+- Autosaves to `localStorage` (debounced, plus flush on close/background).
+- Optional Tauri disk project: link a folder and state is also written to `project.json`.
+- Startup merge logic prefers the newer save (`savedAt`) between local and disk.
+- Manual JSON export/import is available from the backup/disk menu.
+
+## Project Structure
+
+- `App.jsx` - main UI/state container.
+- `components/TipTapEditor.jsx` - editor wrapper and page mode behavior.
+- `components/ReferencesPanel.jsx` - reference library UI.
+- `lib/compile.js` - Markdown/DOCX/print compile.
+- `lib/nameGeneratorData.js` - expanded name pools.
+- `lib/tauriDisk.js` - Tauri project folder read/write.
+- `scripts/tauri-dev.mjs` - Tauri dev launcher.
+- `src-tauri/` - desktop shell config and Rust entrypoint.
+
+## Scripts
+
+- `npm run dev` - Vite web dev server.
+- `npm run build` - production web build.
+- `npm run preview` - preview built web output.
+- `npm run tauri:dev` - desktop dev mode.
+- `npm run tauri:build` - desktop release build.
 
 ## Notes
 
-- Currently uses system fonts. For real polish, add `@import url('https://fonts.googleapis.com/...')` to load Iowan Old Style / Newsreader / Inter properly. Or self-host them.
-- The `library` theme leans hard into serif everything — including UI labels — which is the vibe but does cost some legibility. If it bothers you, set `fontUi` to the same as atelier.
-- LocalStorage caps around 5MB. Plenty for a novel's text. Real file system once you Tauri-fy.
+- This project is local-first and intended for personal drafting workflows.
+- Storage origin changes with port (`localhost:5173` vs `localhost:5174`), so keep your dev port consistent if you rely on browser-only saves.
+- Build output is large because the editor stack is bundled into the main chunk; that can be optimized later with code-splitting.
