@@ -29,8 +29,8 @@ export default function TipTapEditor({
           class: `scriv-editor-root${sheetMode ? ' scriv-editor-sheet' : ''}`,
           style: [
             `font-family:${proseFont}`,
-            `font-size:16px`,
-            'line-height:1.85',
+            `font-size:19px`,
+            'line-height:1.65',
             `color:${textColor}`,
             `text-align:${textAlign}`,
             sheetMode ? 'min-height:70vh' : 'min-height:60vh',

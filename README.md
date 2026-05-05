@@ -1,4 +1,4 @@
-# Scrivener Clone
+
 
 A local-first writing app for long-form fiction, built with React + TipTap + Tauri.
 
@@ -18,7 +18,7 @@ It is designed for drafting scenes quickly while keeping structure, metadata, re
 - **Trash workflow**: move scenes to trash, restore or permanently delete.
 - **Compile/export**: Markdown, DOCX, and Print/PDF output.
 - **Name generator**: expanded multi-origin pools (`english`, `nordic`, `celtic`, `fantasy`, `french`, `slavic`, `spanish`).
-- **Themes**: `library`, `atelier`, `midnight`.
+- **Themes**: `library`, `midnight`.
 
 ## Quick Start (Web)
 

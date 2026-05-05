@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 
-/** @typedef {{ id: string, title: string, body: string }} ReferenceItem */
+/** @typedef {{ id: string, title: string, body: string, kind?: 'text'|'image'|'pdf', source?: string, mime?: string }} ReferenceItem */
 
 /** @param {{ references: ReferenceItem[], setReferences: React.Dispatch<React.SetStateAction<ReferenceItem[]>>, theme: any, pinnedRefId: string | null, setPinnedRefId: (id: string | null) => void, onGoWrite: () => void }} props */
 export default function ReferencesPanel({
@@ -37,30 +37,51 @@ export default function ReferencesPanel({
     const name = file.name.replace(/\.[^.]+$/, '') || 'Imported file';
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     const textish = ['txt', 'md', 'markdown', 'csv', 'json', 'html', 'htm', 'rtf'].includes(ext);
-    if (!textish) {
-      window.alert(
-        `“${file.name}” is not a plain-text format. Convert to .txt or .md and upload again, or paste the text below.`,
-      );
+    const imageish = ['png', 'jpg', 'jpeg'].includes(ext);
+    const pdfish = ext === 'pdf';
+    const reader = new FileReader();
+    reader.onload = () => {
+      const id = `ref-${Date.now()}`;
+      if (textish) {
+        const raw = String(reader.result ?? '');
+        setReferences((list) => [...list, { id, title: name, body: raw, kind: 'text' }]);
+        return;
+      }
+      if (imageish) {
+        const src = String(reader.result ?? '');
+        setReferences((list) => [
+          ...list,
+          { id, title: name, body: `Image reference: ${file.name}`, kind: 'image', source: src, mime: file.type || 'image/png' },
+        ]);
+        return;
+      }
+      if (pdfish) {
+        const src = String(reader.result ?? '');
+        setReferences((list) => [
+          ...list,
+          { id, title: name, body: `PDF reference: ${file.name}`, kind: 'pdf', source: src, mime: file.type || 'application/pdf' },
+        ]);
+        return;
+      }
+      window.alert(`“${file.name}” is not supported. Upload text, PNG/JPEG, or PDF.`);
+    };
+    if (textish) reader.readAsText(file);
+    else if (imageish || pdfish) reader.readAsDataURL(file);
+    else {
+      window.alert(`“${file.name}” is not supported. Upload text, PNG/JPEG, or PDF.`);
       ev.target.value = '';
       return;
     }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const raw = String(reader.result ?? '');
-      const id = `ref-${Date.now()}`;
-      setReferences((list) => [...list, { id, title: name, body: raw }]);
-    };
-    reader.readAsText(file);
     ev.target.value = '';
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ fontSize: 11, color: t.textMuted, lineHeight: 1.45 }}>
-        Upload timelines, outlines, or notes (.txt, .md, .csv, .json…). Pin one to keep it beside the scene editor while you write.
+        Upload timelines, outlines, or notes (.txt, .md, .csv, .json, .png, .jpg, .jpeg, .pdf). Pin one to keep it beside the scene editor while you write.
       </div>
 
-      <input ref={fileRef} type="file" accept=".txt,.md,.markdown,.csv,.json,.html,.htm,.rtf,text/*" style={{ display: 'none' }} onChange={onPickFile} />
+      <input ref={fileRef} type="file" accept=".txt,.md,.markdown,.csv,.json,.html,.htm,.rtf,.png,.jpg,.jpeg,.pdf,text/*,image/png,image/jpeg,application/pdf" style={{ display: 'none' }} onChange={onPickFile} />
       <button type="button" style={btn(t)} onClick={() => fileRef.current?.click()}>
         upload file…
       </button>
@@ -99,6 +120,11 @@ export default function ReferencesPanel({
               }}
             >
               <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 6, color: t.text }}>{r.title}</div>
+              {r.kind && r.kind !== 'text' ? (
+                <div style={{ fontSize: 10, color: t.textMuted, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.05 }}>
+                  {r.kind}
+                </div>
+              ) : null}
               <div style={{ fontSize: 10, color: t.textMuted, maxHeight: 72, overflow: 'hidden', marginBottom: 8 }}>
                 {(r.body || '').slice(0, 400)}
                 {(r.body || '').length > 400 ? '…' : ''}
